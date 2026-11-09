@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "cslp-dev",
+      "credentials": [{ "accessKey": "cslp", "secretKey": "cslp-dev-password" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

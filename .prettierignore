@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+dist
+.next
+packages/api-client/src/generated
+docs/openapi.json

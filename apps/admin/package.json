@@ -1,0 +1,52 @@
+{
+  "name": "@cslp/admin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start --port 3001",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"admin: covered by Playwright e2e (pnpm --filter @cslp/admin e2e)\"",
+    "e2e": "pnpm build:e2e && playwright test",
+    "build:e2e": "NEXT_DIST_DIR=.next-e2e next build"
+  },
+  "dependencies": {
+    "@cslp/api-client": "workspace:*",
+    "@cslp/design-tokens": "workspace:*",
+    "@cslp/shared-types": "workspace:*",
+    "@cslp/validation": "workspace:*",
+    "@hookform/resolvers": "7.0.5",
+    "@tanstack/react-query": "5.107.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.70.0",
+    "next": "16.4.5",
+    "qrcode": "1.5.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-hook-form": "7.91.0",
+    "zod": "4.6.7",
+    "@dnd-kit/core": "6.3.1",
+    "@dnd-kit/sortable": "10.0.0",
+    "@dnd-kit/utilities": "3.2.2",
+    "@tiptap/react": "3.33.0",
+    "@tiptap/starter-kit": "3.33.0",
+    "@tiptap/pm": "3.33.0",
+    "@tiptap/core": "3.33.0",
+    "@tiptap/extension-table": "3.33.0",
+    "@tiptap/extensions": "3.33.0"
+  },
+  "devDependencies": {
+    "@cslp/config": "workspace:*",
+    "@playwright/test": "1.65.0",
+    "@tailwindcss/postcss": "4.3.5",
+    "@types/node": "22.20.5",
+    "@types/qrcode": "1.5.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.5",
+    "otpauth": "9.6.0",
+    "@axe-core/playwright": "4.14.0"
+  }
+}

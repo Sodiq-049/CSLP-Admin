@@ -1,0 +1,37 @@
+{
+  "name": "@cslp/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "generate": "orval --config orval.config.ts",
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@cslp/config": "workspace:*",
+    "@tanstack/react-query": "5.107.1",
+    "@types/react": "19.3.0",
+    "orval": "8.47.0",
+    "react": "19.3.1",
+    "vitest": "5.1.0"
+  }
+}

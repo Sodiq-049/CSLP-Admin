@@ -1,0 +1,58 @@
+{
+  "name": "@cslp/server-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cslp/shared-types": "workspace:*",
+    "@cslp/validation": "workspace:*",
+    "argon2": "0.45.2",
+    "zod": "4.6.7",
+    "@aws-sdk/client-s3": "3.1164.0",
+    "@aws-sdk/s3-request-presigner": "3.1164.0",
+    "bullmq": "6.7.2",
+    "mammoth": "1.13.0",
+    "openai": "7.53.0",
+    "unpdf": "2.1.0",
+    "ioredis": "6.0.0"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^12.0.0",
+    "@nestjs/mongoose": "^12.0.0",
+    "mongoose": "^9.0.0"
+  },
+  "devDependencies": {
+    "@cslp/config": "workspace:*",
+    "@nestjs/common": "12.4.1",
+    "@nestjs/core": "12.4.1",
+    "@nestjs/mongoose": "12.0.1",
+    "mongodb-memory-server": "11.3.0",
+    "mongoose": "9.12.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "vitest": "5.1.0",
+    "@nestjs/testing": "12.4.1",
+    "@nestjs/platform-express": "12.4.1",
+    "unplugin-swc": "2.0.0",
+    "@swc/core": "1.16.22",
+    "pdf-lib": "1.17.1",
+    "docx": "9.15.3"
+  }
+}

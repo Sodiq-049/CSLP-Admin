@@ -1,0 +1,38 @@
+{
+  "name": "cslp",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "contracts:generate": "pnpm --filter @cslp/api openapi:emit && pnpm --filter @cslp/api-client generate",
+    "contracts:check": "pnpm contracts:generate && git diff --exit-code -- docs/openapi.json packages/api-client/src/generated",
+    "infra:up": "docker compose -f infrastructure/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infrastructure/docker-compose.yml down",
+    "seed": "pnpm --filter @cslp/api seed",
+    "e2e": "pnpm --filter @cslp/api build && pnpm --filter @cslp/admin e2e",
+    "dev:admin": "pnpm --filter @cslp/admin dev",
+    "dev:api": "pnpm --filter @cslp/api dev",
+    "dev:worker": "pnpm --filter @cslp/worker dev"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "prettier": "3.9.10",
+    "turbo": "2.11.10",
+    "typescript": "6.0.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.3.0",
+      "@types/react-dom": "19.3.0"
+    }
+  }
+}

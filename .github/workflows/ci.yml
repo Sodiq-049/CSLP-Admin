@@ -1,0 +1,57 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Cache MongoDB binaries (mongodb-memory-server)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Contracts in sync (OpenAPI ↔ generated client)
+        run: pnpm contracts:check
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: verify
+    services:
+      mongo:
+        image: mongodb/mongodb-atlas-local:8.0
+        ports: ['27018:27017']
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+          --health-interval 10s --health-timeout 5s --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm --filter @cslp/admin exec playwright install --with-deps chromium
+      - name: Admin end-to-end tests (real API + MongoDB, axe accessibility checks)
+        run: pnpm --filter @cslp/admin e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: apps/admin/test-results

@@ -1,0 +1,57 @@
+# Local development stack (docs/08 Phase 1.2). `pnpm infra:up`
+name: cslp
+# Host ports avoid the defaults (27017/6379) so CSLP can run beside other local projects.
+# Override with CSLP_MONGO_PORT / CSLP_REDIS_PORT.
+services:
+  mongo:
+    # Atlas Local: real mongod replica set + Atlas Search / Vector Search, matching production.
+    image: mongodb/mongodb-atlas-local:8.0
+    ports: ['${CSLP_MONGO_PORT:-27018}:27017']
+    environment:
+      MONGODB_INITDB_DATABASE: cslp
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.adminCommand("ping").ok']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    # BullMQ requires maxmemory-policy=noeviction and persistence.
+    image: redis:7.4-alpine
+    command: ['redis-server', '--appendonly', 'yes', '--maxmemory-policy', 'noeviction']
+    ports: ['${CSLP_REDIS_PORT:-6380}:6379']
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+
+  storage:
+    # S3-compatible object storage (R2/S3 in production). MinIO stopped publishing images in 2025,
+    # so local dev uses SeaweedFS. S3 endpoint: http://localhost:8333 (key: cslp / cslp-dev-password)
+    image: chrislusf/seaweedfs:4.51
+    command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    ports: ['8333:8333']
+    volumes:
+      - storage-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+
+  clamav:
+    # Optional malware scanning for uploads (large image; first start downloads signatures).
+    # Start with: docker compose -f infrastructure/docker-compose.yml --profile security up -d clamav
+    image: clamav/clamav:1.4
+    profiles: ['security']
+    ports: ['3310:3310']
+
+  mailpit:
+    # Captures outgoing email (invitations, password resets). UI: http://localhost:8025
+    image: axllent/mailpit:v1.24
+    ports: ['1025:1025', '8025:8025']
+
+volumes:
+  mongo-data:
+  mongo-config:
+  redis-data:
+  storage-data:

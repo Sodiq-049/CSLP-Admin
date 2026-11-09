@@ -1,0 +1,14 @@
+node_modules
+dist
+.next
+.turbo
+coverage
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+infrastructure/.data
+test-results
+playwright-report
+.next-e2e
