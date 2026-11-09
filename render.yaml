@@ -27,15 +27,16 @@ services:
         value: 'true'
       - key: TRUST_PROXY_HOPS # Render's proxy + Vercel's rewrite proxy
         value: '2'
-      - key: MAIL_FROM
+      # Email: Resend's SMTP relay (verify your domain in Resend first)
+      - key: MAIL_FROM # e.g. CSLP <no-reply@yourdomain> (must use the Resend-verified domain)
         sync: false
       - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
+        value: smtp.resend.com
+      - key: SMTP_PORT # use 465 if 587 is ever blocked (SSL switches on automatically)
         value: '587'
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
+      - key: SMTP_USER # literally "resend"
+        value: resend
+      - key: SMTP_PASS # Resend API key (re_...), sending access only
         sync: false
       - key: SEED_SUPER_ADMIN_EMAIL
         sync: false
