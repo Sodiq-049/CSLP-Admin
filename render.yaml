@@ -1,0 +1,103 @@
+# Render Blueprint for the CSLP backend (docs/10-vercel-render.md).
+# Render dashboard → New → Blueprint → pick this repository. Values marked `sync: false` are asked
+# for on first deploy; `generateValue` ones are created randomly by Render.
+services:
+  - type: web
+    name: cslp-api
+    runtime: node
+    region: frankfurt
+    plan: starter
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter=@cslp/api
+    startCommand: node --enable-source-maps apps/api/dist/main.js
+    healthCheckPath: /api/v1/public/health
+    autoDeploy: true
+    envVars:
+      - fromGroup: cslp-shared
+      - key: REDIS_URL
+        fromService: { type: keyvalue, name: cslp-queue, property: connectionString }
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: MFA_ENCRYPTION_KEY # 32 random bytes, base64 — never change it once anyone uses two-step verification
+        generateValue: true
+      - key: ADMIN_APP_URL # your Vercel URL, e.g. https://cslp-admin.vercel.app
+        sync: false
+      - key: CORS_ORIGINS # student website origin(s) later; empty for now
+        value: ''
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: TRUST_PROXY_HOPS # Render's proxy + Vercel's rewrite proxy
+        value: '2'
+      - key: MAIL_FROM
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: '587'
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SEED_SUPER_ADMIN_EMAIL
+        sync: false
+
+  - type: worker
+    name: cslp-worker
+    runtime: node
+    region: frankfurt
+    plan: starter
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter=@cslp/worker
+    startCommand: node --enable-source-maps apps/worker/dist/main.js
+    autoDeploy: true
+    envVars:
+      - fromGroup: cslp-shared
+      - key: REDIS_URL
+        fromService: { type: keyvalue, name: cslp-queue, property: connectionString }
+
+  - type: keyvalue
+    name: cslp-queue
+    region: frankfurt
+    plan: starter
+    maxmemoryPolicy: noeviction # BullMQ must never lose queued jobs
+    ipAllowList: [] # private network only
+
+envVarGroups:
+  - name: cslp-shared
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: LOG_LEVEL
+        value: info
+      - key: MONGODB_URI # Atlas connection string ending in /cslp
+        sync: false
+      # Files: Cloudflare R2 (or any S3-compatible bucket)
+      - key: S3_ENDPOINT # https://<account-id>.r2.cloudflarestorage.com
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_FORCE_PATH_STYLE
+        value: 'true'
+      # AI
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: AI_TEXT_PROVIDER
+        value: openai
+      - key: AI_EMBEDDINGS_PROVIDER
+        value: openai
+      - key: AI_MODEL_OUTLINE_EXTRACT
+        value: gpt-5.4-mini-2026-03-17
+      - key: AI_MODEL_NOTES
+        value: gpt-5.4-2026-03-05
+      - key: AI_MODEL_REVISION
+        value: gpt-5.4-2026-03-05
+      - key: AI_EMBEDDINGS_MODEL
+        value: text-embedding-3-small
+      - key: AI_EMBEDDINGS_DIMENSIONS
+        value: '1536'

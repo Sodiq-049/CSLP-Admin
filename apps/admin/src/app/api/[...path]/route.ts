@@ -19,6 +19,20 @@ const HOP_BY_HOP = [
   'trailer',
 ];
 
+/**
+ * The visitor's IP as seen by the platform in front of this server. Each trusted proxy appends the
+ * address it received the request from, so with N trusted hops the client is the N-th entry from
+ * the right (Cloud Run alone: 1; behind an external HTTPS load balancer: 2).
+ */
+function clientIp(req: NextRequest): string | null {
+  const hops = Number(process.env.TRUST_PROXY_HOPS ?? 1);
+  const chain = (req.headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return chain[chain.length - hops] ?? null;
+}
+
 async function proxy(
   req: NextRequest,
   ctx: { params: Promise<{ path: string[] }> },
@@ -32,6 +46,15 @@ async function proxy(
 
   const headers = new Headers(req.headers);
   for (const h of HOP_BY_HOP) headers.delete(h);
+  // Never let the browser supply these; only this server may vouch for the visitor's IP.
+  headers.delete('x-cslp-proxy-secret');
+  headers.delete('x-cslp-client-ip');
+  const secret = process.env.PROXY_SHARED_SECRET;
+  const ip = clientIp(req);
+  if (secret && ip) {
+    headers.set('x-cslp-proxy-secret', secret);
+    headers.set('x-cslp-client-ip', ip);
+  }
   headers.set('x-forwarded-host', req.headers.get('host') ?? '');
   headers.set('x-forwarded-proto', req.nextUrl.protocol.replace(':', ''));
 

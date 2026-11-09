@@ -4,6 +4,8 @@ import { SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
+import { isIP } from 'node:net';
+import { safeEqual } from './auth/crypto.js';
 import { AppModule } from './app.module.js';
 import type { AppConfig } from './config/env.js';
 import { buildOpenApiDocument } from './openapi/document.js';
@@ -14,8 +16,28 @@ export function configureApp(
   config: AppConfig,
 ): NestExpressApplication {
   app.useLogger(app.get(Logger));
-  app.set('trust proxy', 1);
+  app.set('trust proxy', config.TRUST_PROXY_HOPS);
   app.disable('x-powered-by');
+  const secret = config.PROXY_SHARED_SECRET;
+  if (secret) {
+    // Requests relayed by the admin portal carry the visitor's IP, vouched for by a shared secret.
+    app.use((req: { headers: Record<string, unknown> }, _res: unknown, next: () => void) => {
+      const given = req.headers['x-cslp-proxy-secret'];
+      const ip = req.headers['x-cslp-client-ip'];
+      if (
+        typeof given === 'string' &&
+        safeEqual(given, secret) &&
+        typeof ip === 'string' &&
+        isIP(ip)
+      ) {
+        Object.defineProperty(req, 'ip', { value: ip, configurable: true });
+        Object.defineProperty(req, 'ips', { value: [ip], configurable: true });
+      }
+      delete req.headers['x-cslp-proxy-secret'];
+      delete req.headers['x-cslp-client-ip'];
+      next();
+    });
+  }
   app.use(helmet());
   app.use(cookieParser());
   app.useBodyParser('json', { limit: '1mb' });

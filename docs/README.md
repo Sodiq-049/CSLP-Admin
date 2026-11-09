@@ -15,6 +15,7 @@ Architecture documentation for the shared platform: **Admin Portal**, **Student 
 | 07  | [AI video pipeline](07-ai-video-pipeline.md)              | Script → scenes → TTS → captions → Remotion render → review                           |
 | 08  | [Roadmap](08-roadmap.md)                                  | Phases, milestones, exit criteria, testing strategy, deployment                       |
 | 09  | [Deployment & operations](09-deployment.md)               | Docker images, managed services, configuration, security baseline, operations         |
+| 10  | [Vercel + Render deployment](10-vercel-render.md)         | Admin on Vercel, API + worker + queue on Render, R2 files, Atlas, step-by-step        |
 
 ## The non-negotiables (from the brief)
 

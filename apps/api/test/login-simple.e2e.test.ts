@@ -39,3 +39,33 @@ describe('optional two-step verification', () => {
     expect(again.body.data.status).toBe('mfa_required');
   });
 });
+
+describe('visitor IP relayed by the admin portal', () => {
+  let p: Harness;
+  const SECRET = 'proxy-secret-'.padEnd(40, 'z');
+  beforeAll(async () => {
+    p = await startHarness({ MFA_REQUIRED: 'false', PROXY_SHARED_SECRET: SECRET });
+    await createUser(p, 'ip.user@test.dev', { role: 'super_admin' });
+  });
+  afterAll(async () => p.close());
+  const lastIp = async () =>
+    (await p.users.findOne({ email: 'ip.user@test.dev' }).lean())!.security.lastLoginIp;
+  const login = (headers: Record<string, string>) =>
+    new Client(p.server).post(
+      '/auth/login',
+      { email: 'ip.user@test.dev', password: STRONG_PASSWORD },
+      headers,
+    );
+
+  it('uses the reported IP only when the shared secret matches', async () => {
+    await login({ 'x-cslp-proxy-secret': SECRET, 'x-cslp-client-ip': '203.0.113.7' });
+    expect(await lastIp()).toBe('203.0.113.7');
+    await login({
+      'x-cslp-proxy-secret': 'wrong'.padEnd(40, 'x'),
+      'x-cslp-client-ip': '198.51.100.9',
+    });
+    expect(await lastIp()).not.toBe('198.51.100.9');
+    await login({ 'x-cslp-client-ip': '198.51.100.9' });
+    expect(await lastIp()).not.toBe('198.51.100.9');
+  });
+});

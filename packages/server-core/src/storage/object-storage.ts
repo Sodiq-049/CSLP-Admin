@@ -25,6 +25,11 @@ export class ObjectStorage implements OnModuleInit {
         region: s.region,
         endpoint: s.endpoint,
         forcePathStyle: s.forcePathStyle,
+        // Only send checksums when an operation needs them: S3-compatible stores such as Google
+        // Cloud Storage (HMAC interoperability) and SeaweedFS reject the SDK's default
+        // aws-chunked CRC uploads.
+        requestChecksumCalculation: 'WHEN_REQUIRED',
+        responseChecksumValidation: 'WHEN_REQUIRED',
         credentials: { accessKeyId: s.accessKeyId, secretAccessKey: s.secretAccessKey },
       });
       this.bucket = s.bucket;

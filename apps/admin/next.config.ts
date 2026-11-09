@@ -30,7 +30,22 @@ const config: NextConfig = {
     : {}),
   reactStrictMode: true,
   poweredByHeader: false,
-  // /api/* is proxied at runtime by src/app/api/[...path]/route.ts (reads API_URL per request).
+  /**
+   * /api/* normally goes through src/app/api/[...path]/route.ts (reads API_URL per request). On
+   * hosts where that route would run as a size-limited serverless function (Vercel: 4.5 MB request
+   * bodies), set API_PROXY_MODE=rewrite: the platform then streams /api/* to API_URL itself, so
+   * large uploads work. API_URL must be set at build time in that mode.
+   */
+  async rewrites() {
+    if (process.env.API_PROXY_MODE !== 'rewrite') return [];
+    const api = process.env.API_URL;
+    if (!api) throw new Error('API_PROXY_MODE=rewrite needs API_URL at build time');
+    return {
+      beforeFiles: [{ source: '/api/:path*', destination: `${api.replace(/\/$/, '')}/api/:path*` }],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   async headers() {
     return [
       {

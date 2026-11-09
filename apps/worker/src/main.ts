@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { createServer } from 'node:http';
 import { Logger as NestLogger, Module, type DynamicModule } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MongooseModule, getConnectionToken } from '@nestjs/mongoose';
@@ -135,6 +136,20 @@ log.log(
   `Listening on ${workers.map((w) => w.name).join(', ')} (concurrency ${env.WORKER_CONCURRENCY})`,
 );
 
+// Cloud Run (K_SERVICE is set there) expects the container to answer on $PORT. Elsewhere only
+// when WORKER_HEALTH_PORT is set, because a shared .env may hold the API's PORT.
+const healthPort =
+  process.env.WORKER_HEALTH_PORT ?? (process.env.K_SERVICE ? process.env.PORT : undefined);
+const health = healthPort
+  ? createServer((_req, res) => {
+      const ok = workers.every((w) => w.isRunning());
+      res.writeHead(ok ? 200 : 503, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ status: ok ? 'ok' : 'stopped' }));
+    })
+      .on('error', (err) => log.error(`Health endpoint unavailable: ${err.message}`))
+      .listen(Number(healthPort), () => log.log(`Health endpoint on :${healthPort}`))
+  : null;
+
 // Scheduled publishing sweep (docs/05 §5): every minute, one worker at a time (Redis lock).
 const sweep = setInterval(async () => {
   try {
@@ -159,6 +174,7 @@ const shutdown = async (signal: string) => {
   stopping = true;
   log.log(`${signal} received: finishing current jobs…`);
   clearInterval(sweep);
+  health?.close();
   await Promise.all(workers.map((w) => w.close()));
   await connection.quit().catch(() => undefined);
   await app.close();

@@ -33,6 +33,13 @@ export const EnvSchema = z
     VALIDATE_RESPONSES: bool.optional(),
     /** Force two-step verification on Super/Institution Administrators. Off: MFA is optional per user. */
     MFA_REQUIRED: bool.default(false),
+    /** Proxies in front of the API (Cloud Run front end = 1; plus an external load balancer = 2). */
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
+    /**
+     * Shared with the admin portal's /api proxy. When the header matches, the API uses the
+     * visitor IP the portal reports (otherwise every admin would share the portal's IP for rate limits).
+     */
+    PROXY_SHARED_SECRET: z.string().min(32).optional(),
     /** Where students land from email links (verification, password reset). */
     STUDENT_APP_URL: z.string().url().optional(),
     SMTP_HOST: z.string().optional(),

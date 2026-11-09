@@ -1,5 +1,7 @@
 # 09 · Deployment & operations
 
+> Deploying on Vercel + Render? Follow [10-vercel-render.md](10-vercel-render.md); it builds on everything below.
+
 How to run CSLP in production. Hosting is still an open decision (README), so this guide covers what any host needs: three containers, MongoDB Atlas, Redis, S3-compatible storage and SMTP.
 
 ## 1. Images
@@ -45,6 +47,7 @@ All settings are environment variables, validated at start-up (the process exits
 | `S3_*`                                                               | Required whenever `REDIS_URL` is set (the worker can't read in-memory uploads).                                                                             |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`      | Without `SMTP_HOST`, mail is only logged. Don't do that in production.                                                                                      |
 | `MFA_REQUIRED`                                                       | Default `false`: sign-in is email + password and users may turn on two-step verification in Settings. `true` forces it on Super/Institution Administrators. |
+| `TRUST_PROXY_HOPS`, `PROXY_SHARED_SECRET`                            | Proxies in front of the API (default 1). The secret is shared with the admin portal so it can pass on the visitor's IP.                                     |
 | `STUDENT_EMAIL_DOMAINS`                                              | Optional allow-list for student self-registration (e.g. the institution's domain).                                                                          |
 | `OPENAI_API_KEY`, `AI_TEXT_PROVIDER`, `AI_MODEL_*`, `AI_PRICES_JSON` | See docs/06. Set `AI_PRICES_JSON` to see cost estimates.                                                                                                    |
 | Admin: `API_URL`                                                     | Internal URL of the API; the admin server proxies `/api/*` to it at request time.                                                                           |
