@@ -73,15 +73,15 @@ Push to the main branch: Render rebuilds the API and worker, Vercel rebuilds the
 - **Uploads:** upload a PDF in _Source Library_; it should reach _Ready_ (that proves API → R2 → worker → Atlas).
 - **Email:** _Forgot your password?_ on the sign-in page should deliver a link.
 
-## 7. Cost (starter plans, approx. per month)
+## 7. Cost (smallest paid plans, approx. per month)
 
 | Item                           | Price            |
 | ------------------------------ | ---------------- |
-| Render `cslp-api` (Starter)    | US$7             |
-| Render `cslp-worker` (Starter) | US$7             |
-| Render Key Value (Starter)     | US$10            |
+| Render `cslp-api` (0.5c-512mb) | US$7             |
+| Render `cslp-worker` (0.5c-512mb) | US$7             |
+| Render Key Value (256mb)    | US$10            |
 | Vercel (Hobby / Pro)           | US$0 / US$20     |
 | Cloudflare R2                  | free up to 10 GB |
 | Atlas, OpenAI, SMTP            | your plans       |
 
-Render's free web plan sleeps after inactivity (slow first request, and the worker type has no free plan), so Starter is recommended for the API. Vercel's Hobby plan is for non-commercial use; use Pro for an institution.
+Render's free web plan sleeps after inactivity (slow first request, and the worker type has no free plan), so the smallest paid plan is recommended for the API. Vercel's Hobby plan is for non-commercial use; use Pro for an institution.

@@ -6,7 +6,7 @@ services:
     name: cslp-api
     runtime: node
     region: frankfurt
-    plan: starter
+    plan: 0.5c-512mb
     buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter=@cslp/api
     startCommand: node --enable-source-maps apps/api/dist/main.js
     healthCheckPath: /api/v1/public/health
@@ -15,6 +15,19 @@ services:
       - fromGroup: cslp-shared
       - key: REDIS_URL
         fromService: { type: keyvalue, name: cslp-queue, property: connectionString }
+      # Secrets: asked once here; the worker copies them from this service.
+      - key: MONGODB_URI # Atlas connection string ending in /cslp
+        sync: false
+      - key: S3_ENDPOINT # https://<account-id>.r2.cloudflarestorage.com
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: MFA_ENCRYPTION_KEY # 32 random bytes, base64 — never change it once anyone uses two-step verification
@@ -45,7 +58,7 @@ services:
     name: cslp-worker
     runtime: node
     region: frankfurt
-    plan: starter
+    plan: 0.5c-512mb
     buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter=@cslp/worker
     startCommand: node --enable-source-maps apps/worker/dist/main.js
     autoDeploy: true
@@ -53,11 +66,23 @@ services:
       - fromGroup: cslp-shared
       - key: REDIS_URL
         fromService: { type: keyvalue, name: cslp-queue, property: connectionString }
+      - key: MONGODB_URI
+        fromService: { type: web, name: cslp-api, envVarKey: MONGODB_URI }
+      - key: S3_ENDPOINT
+        fromService: { type: web, name: cslp-api, envVarKey: S3_ENDPOINT }
+      - key: S3_BUCKET
+        fromService: { type: web, name: cslp-api, envVarKey: S3_BUCKET }
+      - key: S3_ACCESS_KEY_ID
+        fromService: { type: web, name: cslp-api, envVarKey: S3_ACCESS_KEY_ID }
+      - key: S3_SECRET_ACCESS_KEY
+        fromService: { type: web, name: cslp-api, envVarKey: S3_SECRET_ACCESS_KEY }
+      - key: OPENAI_API_KEY
+        fromService: { type: web, name: cslp-api, envVarKey: OPENAI_API_KEY }
 
   - type: keyvalue
     name: cslp-queue
     region: frankfurt
-    plan: starter
+    plan: 256mb
     maxmemoryPolicy: noeviction # BullMQ must never lose queued jobs
     ipAllowList: [] # private network only
 
@@ -70,24 +95,12 @@ envVarGroups:
         value: 22.14.0
       - key: LOG_LEVEL
         value: info
-      - key: MONGODB_URI # Atlas connection string ending in /cslp
-        sync: false
       # Files: Cloudflare R2 (or any S3-compatible bucket)
-      - key: S3_ENDPOINT # https://<account-id>.r2.cloudflarestorage.com
-        sync: false
       - key: S3_REGION
         value: auto
-      - key: S3_BUCKET
-        sync: false
-      - key: S3_ACCESS_KEY_ID
-        sync: false
-      - key: S3_SECRET_ACCESS_KEY
-        sync: false
       - key: S3_FORCE_PATH_STYLE
         value: 'true'
       # AI
-      - key: OPENAI_API_KEY
-        sync: false
       - key: AI_TEXT_PROVIDER
         value: openai
       - key: AI_EMBEDDINGS_PROVIDER
